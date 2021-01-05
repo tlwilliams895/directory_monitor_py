@@ -3,9 +3,12 @@
 Dirwatcher - A long-running program
 """
 
-__author__ = "???"
+__author__ = """T.L. Williams(tlwilliams895) completed assessment with
+            Deidre Boddie and Dessance Chandler"""
 
 import sys
+import logger
+
 
 
 def search_for_magic(filename, start_line, magic_string):
