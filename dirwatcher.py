@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 """
 Dirwatcher - A long-running program
+- argparse
+- find the files
+- write the logger handler
+- exception
+- long running program
 """
 
 __author__ = """T.L. Williams(tlwilliams895) completed assessment with
@@ -19,6 +24,7 @@ exit_flag = True
 # This variable will be available for the duration
 state = {}
 
+
 def search_for_magic(filename, start_line, magic_string):
     # Your code here - call from watch_dir
     return
@@ -31,20 +37,28 @@ def watch_directory(path, magic_string, extension, interval):
 
 
 def create_parser():
-    parser =  argparse.ArgumentParser()
-    parser.add_argument("-i", default = "3", help="polling interval")
-    parser.add_argument("magic_str", help="magic text")
-    parser.add_argument("ext", help="directory to search") 
-    parser.add_argument("-p", "--path", default = ".txt", help="directory to watch")
+    # Create the parser
+    dw_parser = argparse.ArgumentParser(
+                description="List the content of a folder")
 
-    return parser
+    # Add the arguments for dirwatcher
+    dw_parser.add_argument("-i", default="3", help="polling interval")
+
+    dw_parser.add_argument("magic_str", help="magic text")
+
+    dw_parser.add_argument("ext", help="directory to search")
+
+    dw_parser.add_argument("-p", "--path", default=".txt", help="directory to watch")
+
+    return dw_parser
 
 
 def signal_handler(sig_num, frame):
     # Your code here
     """
-    This is a handler for SIGTERM and SIGINT. Other signals can be mapped here as well (SIGHUP?)
-    Basically, it just sets a global flag, and main() will exit its loop if the signal is trapped.
+    This is a handler for SIGTERM and SIGINT. Other signals can be
+    mapped here as well (SIGHUP?). Basically, it just sets a global flag,
+    and main() will exit its loop if the signal is trapped.
     :param sig_num: The integer signal number that was trapped from the OS.
     :param frame: Not used
     :return None
@@ -56,19 +70,26 @@ def signal_handler(sig_num, frame):
 
 
 def main(args):
-    # Your code here
-    # Hook into these two signals from the OS
-    # signal.signal(signal.SIGINT, signal_handler)
-    # signal.signal(signal.SIGTERM, signal_handler)
-    # Now my signal_handler will get called if OS sends
-    # either of these to my process.
+    """
+    Hook into these two signals from the OS
+    - signal.signal(signal.SIGINT, signal_handler)
+    - signal.signal(signal.SIGTERM, signal_handler)
+    Now my signal_handler will get called if OS sendseither of these
+    to my process.
+    """
 
     parser = create_parser()
     if not args:
         parser.print_usage()
         sys.exit(1)
-    
+
     parsed_args = parser.parse_args(args)
+
+    """
+    After the .parse_args() above is executed a Namespace (simple Class
+    object/property) is created by default holding attributes for each
+    input args received/returned from the command line.
+    """
     print(parsed_args)
 
     while not exit_flag:
