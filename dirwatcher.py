@@ -29,8 +29,8 @@ to (usually) a string which can be interpreted by either a human or
 an external system.
 """
 logging.basicConfig(
-    format="%(asctime)s %(filename)-12s %(levelname)-8s %(message)-8s %(lineno)d",
-    datefmt="%A, %B %d, %Y--%H:%M:%S%p",
+    format="%(asctime)s %(name)-12s %(levelname)-8s %(message)-8s %(lineno)d",
+    datefmt="%A, %B %d, %Y--%I:%M:%S%p",
     level=logging.DEBUG
 )
 
@@ -40,7 +40,7 @@ logger = logging.getLogger(__name__)
 exit_flag = False
 
 # This variable will be available for the duration for the files being watched
-state_of_files = {}
+watched_files = {}
 
 
 def search_for_magic(filename, start_line, magic_string):
@@ -110,9 +110,8 @@ def signal_handler(sig_num, frame):
 
     # log the associated signal name
     logger.warning('Signal Received: ' + signal.Signals(sig_num).name)
-    exit_flag = True
 
-    return
+    exit_flag = True
 
 
 def main(args):
@@ -138,35 +137,36 @@ def main(args):
     # Now my signal_handler will get called if OS sends
     # either of these to my process.
 
-    # Create start_up banner
-    # File_Name that is running
-    # Add time_stamp
+    # Create start_up banner to display info from program
+    # File_Name that is running; Add time_stamp from datetime module
     start_time = datetime.datetime.now()
+    # Use () to add data as strings, not a tuple
     start_up = (
         "\n" +
-        "*" * 80 +
+        "*" * 100 +
         f"\n\tRunning {__file__}" +
         f"\n\tStarted on {start_time.isoformat()}\n" +
-        "*" * 80
+        "*" * 100
     )
-    logger.info(start_up)
 
-    global state_of_files
+    logger.info(start_up)
 
     while not exit_flag:
         try:
             # call my directory watching function
-            watch_directory()
-            pass
+            # watch_directory()
+            logger.info("Info logger running...")
+        except KeyboardInterrupt:
+            break
         except Exception as err:
             # This is an UNHANDLED exception
             # Log an ERROR level message here
             logger.error("Exception Message: ", err)
             pass
 
-        # put a sleep inside my while loop so I don't peg the cpu usage at 100%
-        # time.sleep(polling_interval)
-        time.sleep(3)
+            # put a sleep inside my while loop so I don't peg the
+            # cpu usage at 100%. EX: time.sleep(polling_interval)
+            time.sleep(3)
 
     # final exit point happens here
     # Log a message that we are shutting down
@@ -175,17 +175,14 @@ def main(args):
     total_runtime = datetime.datetime.now() - start_time
     shut_down = (
         "\n" +
-        "*" * 80 +
+        "*" * 100 +
         f"\n\tStopped at: {__file__}" +
         f"\n\tTotal Runtime: {total_runtime}\n" +
-        "*" * 80
+        "*" * 100
     )
     logger.info(shut_down)
 
-    return
 
 # Import guard clause
-
-
 if __name__ == '__main__':
     main(sys.argv[1:])
