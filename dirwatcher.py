@@ -12,6 +12,7 @@ Dirwatcher - A long-running program
 __author__ = """T.L. Williams(tlwilliams895) completed assessment with
         Deidre Boddie and Dessance Chandler; used Python docs, RealPython
         website, SE workshop/demos, and other resources to complete assessment
+        Received assistance from Kano Marvel and JT Maupin
         """
 
 import sys
@@ -67,9 +68,40 @@ def watch_directory(path, magic_string, extension, interval):
     the end of the file, so you won't have to continually re-check sections of
     a file that you have already checked.
     """
-    # Your code here
-    # search_4_magic = search_for_magic()
-    return
+    directory = os.path.isdir(path)
+    list_dir = os.listdir(path)
+
+    if not directory:
+        logger.info(f"Directory Not Found: {path}")
+        print("Directory Not Found!")
+    else:
+        # check for correct extension
+        files = [file for file in list_dir if file.endswith(extension)]
+
+        for file in files:
+            if file not in watched_files:
+                watched_files[file] = 0
+                logger.info("New File Found")
+            # Use os.path.join() to create a path to direct the file
+            new_file = os.path.join(path, file)
+
+            with open(new_file) as f:
+                # Accurate line count for tracking
+                lines_counted = watched_files[file]
+                # Create a counter variable initialized at 0
+                line_count = watched_files[file]
+                # Retrieve list of all of the lines
+                lines = f.readlines()
+                # Use for loop to return the line number and text
+                for index, line in enumerate(lines[line_count:]):
+                    line_count += 1
+                    if magic_string in line:
+                        ending_line = index + lines_counted
+                        logger.info(
+                            f"Magic Text was found on line: {ending_line}"
+                            )
+                # Use dictionary variable to output the number of files
+                watched_files[file] = line_count
 
 
 def create_parser():
@@ -78,20 +110,22 @@ def create_parser():
         prog="DirWatcher",
         description="Program will continually search within all files for modifications in the directory.",
         epilog="Enjoy the DirWatcher program! :-)"
-        )
+    )
 
     # Add the arguments for dirwatcher
-    parser.add_argument("-i", "--interval", default="1",
-                        help="Polling interval")
+    parser.add_argument("path", default=".",
+                        help="Specify the directory to watch",
+                        nargs="?")
+    parser.add_argument("magic", default="flow",
+                        help="Magic text to search for",
+                        nargs="?")
 
-    parser.add_argument("-m", "--magic_text",
-                        help="Magic text to search for")
+    parser.add_argument("-i", default="3",
+                        type=int, help="Polling interval")
 
-    parser.add_argument("-e", "--ext", default=".txt",
+    parser.add_argument("-e", default=".txt",
                         help="Filters type of file extension to search within")
 
-    parser.add_argument("-d", "--dir", default="/",
-                        help="Specify the directory to watch")
     return parser
 
 
@@ -115,21 +149,16 @@ def signal_handler(sig_num, frame):
 
 
 def main(args):
+    # Parse command-line arguments to be used
     parser = create_parser()
-
     # Execute the parse_args() method
     args = parser.parse_args(args)
-
-    # if not args:
-    #     parser.print_usage()
-    #     sys.exit(1)
 
     """
     After the .parse_args() above is executed a Namespace (simple Class
     object/property) is created by default holding attributes for each
     input args received/returned from the command line.
     """
-    # print(parsed_args)
 
     # Hook into these two signals from the OS
     signal.signal(signal.SIGINT, signal_handler)
@@ -153,11 +182,18 @@ def main(args):
 
     while not exit_flag:
         try:
-            # call my directory watching function
-            # watch_directory()
-            logger.info("Info logger running...")
+            # call my directory watching function and parameters
+            watch_directory(
+                args.path,
+                args.magic,
+                args.e,
+                args.i
+            )
+            # logger.info("Info logger running in try/except")
         except KeyboardInterrupt:
             break
+        except FileNotFoundError as err:
+            logger.error("File Not Found", err)
         except Exception as err:
             # This is an UNHANDLED exception
             # Log an ERROR level message here
@@ -166,7 +202,7 @@ def main(args):
 
             # put a sleep inside my while loop so I don't peg the
             # cpu usage at 100%. EX: time.sleep(polling_interval)
-            time.sleep(3)
+            time.sleep(args.i)
 
     # final exit point happens here
     # Log a message that we are shutting down
