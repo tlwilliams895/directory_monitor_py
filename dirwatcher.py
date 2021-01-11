@@ -96,9 +96,9 @@ def watch_directory(path, magic_string, extension, interval):
                 for index, line in enumerate(lines[line_count:]):
                     line_count += 1
                     if magic_string in line:
-                        ending_line = index + lines_counted
+                        ending_line = index + lines_counted + 1
                         logger.info(
-                            f"Magic Text was found on line: {ending_line}"
+                            f"Magic_Text: {magic_string}; Found in file: {file}; Line #{ending_line}"
                             )
                 # Use dictionary variable to output the number of files
                 watched_files[file] = line_count
@@ -120,10 +120,10 @@ def create_parser():
                         help="Magic text to search for",
                         nargs="?")
 
-    parser.add_argument("-i", default="3",
+    parser.add_argument("-i", "--interval", default="1",
                         type=int, help="Polling interval")
 
-    parser.add_argument("-e", default=".txt",
+    parser.add_argument("-e", "--extension", default=".txt",
                         help="Filters type of file extension to search within")
 
     return parser
@@ -186,23 +186,22 @@ def main(args):
             watch_directory(
                 args.path,
                 args.magic,
-                args.e,
-                args.i
+                args.extension,
+                args.interval
             )
             # logger.info("Info logger running in try/except")
         except KeyboardInterrupt:
             break
-        except FileNotFoundError as err:
-            logger.error("File Not Found", err)
+        except FileNotFoundError:
+            logger.error("File Not Found")
         except Exception as err:
             # This is an UNHANDLED exception
             # Log an ERROR level message here
             logger.error("Exception Message: ", err)
-            pass
 
             # put a sleep inside my while loop so I don't peg the
             # cpu usage at 100%. EX: time.sleep(polling_interval)
-            time.sleep(args.i)
+            time.sleep(args.interval)
 
     # final exit point happens here
     # Log a message that we are shutting down
