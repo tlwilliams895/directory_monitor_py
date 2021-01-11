@@ -161,7 +161,7 @@ def main(args):
     parser = create_parser()
     # Execute the parse_args() method
     args = parser.parse_args(args)
-    
+
     """
     After the .parse_args() above is executed a Namespace (simple Class
     object/property) is created by default holding attributes for each
@@ -184,7 +184,7 @@ def main(args):
         f"\n\tStarted on {start_time.isoformat()}\n" +
         "*" * 100
     )
-    # Issues a log message from the start_up tuple
+    # Issues a log message from the start_up strings
     logger.info(start_up)
 
     # global state_of_files
@@ -192,9 +192,8 @@ def main(args):
     while not exit_flag:
         try:
             # The code to be monitored by try clause to detect an exception
-            # FileNotFoundError - [Errno 2] No such file or directory: blah.txt
             # Call the watch_directory function - What's missing here??
-            # watch_directory(args)
+            # watch_directory(args.path)
             logger.error(f"Does this work?")
             time.sleep(args.interval)
         # OSError is a built-in exception in Python and serves as the error
@@ -206,11 +205,13 @@ def main(args):
             time.sleep(args.interval)
         except KeyboardInterrupt as key:
             logger.error(f"Keyboard Command: {key}")
+        except FileNotFoundError as err:
+            # FileNotFoundError - [Errno 2] No such file or directory: dir1.txt
+            logger.error(f"File Not Found: {err}")
         # Keep this except clause at the end to allow other exceptions to run
         except Exception as err:
-            # This is an UNHANDLED exception
-            # Log an ERROR level message here
-            logger.error(f"Exception Message: ", {err})
+            # This is an UNHANDLED exception - Log an ERROR level message here
+            logger.error(f"Exception Message: {err}")
             # put a sleep inside my while loop so I don't peg the cpu usage
             # at 100%. EX: time.sleep(polling_interval)
             time.sleep(args.interval)
