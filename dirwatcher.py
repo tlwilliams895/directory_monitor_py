@@ -44,6 +44,8 @@ logger.setLevel(logging.DEBUG)
 exit_flag = False
 # This variable will be available for the duration for the files being watched
 watched_files = {}
+# Store location/positon of magic text in dictionary variable
+# locate_magic_text = {}
 
 
 def search_for_magic(filename, start_line, magic_string):
@@ -58,6 +60,7 @@ def search_for_magic(filename, start_line, magic_string):
     # Your code here - call from watch_dir
     # start_line = 0
     # return start_line
+    # global locate_magic_text
 
 
 def watch_directory(path, magic_string, extension, interval):
@@ -70,20 +73,22 @@ def watch_directory(path, magic_string, extension, interval):
     the end of the file, so you won't have to continually re-check sections of
     a file that you have already checked.
     """
+    global watched_files
+    # global locate_magic_text
     directory = os.path.isdir(path)
     list_dir = os.listdir(path)
 
     if not directory:
         logger.info(f"Directory Not Found: {path}")
-        print("Directory Not Found!")
     else:
         # check for correct extension
         files = [file for file in list_dir if file.endswith(extension)]
 
+        # Checks for new files with extension in the dictionary
         for file in files:
             if file not in watched_files:
                 watched_files[file] = 0
-                logger.info("New File Found")
+                logger.info(f"New File: {file} was Found")
             # Use os.path.join() to create a path to direct the file
             new_file = os.path.join(path, file)
 
@@ -98,12 +103,21 @@ def watch_directory(path, magic_string, extension, interval):
                 for index, line in enumerate(lines[line_count:]):
                     line_count += 1
                     if magic_string in line:
-                        ending_line = index + lines_counted
+                        ending_line = index + lines_counted + 1
                         logger.info(
-                            f"Magic Text was found on line: {ending_line}"
+                            f"Magic_Text: {magic_string}; Found in file: {file}; Line #{ending_line}"
                             )
                 # Use dictionary variable to output the number of files
                 watched_files[file] = line_count
+
+        # Deletes file from directory
+        del_files = []
+        for file in watched_files:
+            if file not in files:
+                del_files.append(file)
+                logger.info(f"File Deleted: {file}")
+        for file in del_files:
+            del watched_files[file]
 
 
 def create_parser():
@@ -126,10 +140,10 @@ def create_parser():
                         help="Magic text to search for",
                         nargs="?")
 
-    parser.add_argument("-i", default="3",
+    parser.add_argument("-i", "--interval", default="1",
                         type=int, help="Polling interval")
 
-    parser.add_argument("-e", default=".txt",
+    parser.add_argument("-e", "--extension", default=".txt",
                         help="Filters type of file extension to search within")
 
     return parser
@@ -200,14 +214,16 @@ def main(args):
             watch_directory(
                 args.path,
                 args.magic,
-                args.e,
-                args.i
+                args.extension,
+                args.interval
             )
             # logger.info("Info logger running in try/except")
         except KeyboardInterrupt:
             break
-        except FileNotFoundError as err:
-            logger.error("File Not Found", err)
+        except FileNotFoundError:
+            logger.error("File Not Found")
+        except RuntimeError as err:
+            logger.error("Received and Logged Runtime Error: ", err)
         except Exception as err:
             # This is an UNHANDLED exception
             # Log an ERROR level message here
@@ -215,7 +231,7 @@ def main(args):
 
             # put a sleep inside my while loop so I don't peg the
             # cpu usage at 100%. EX: time.sleep(polling_interval)
-            time.sleep(args.i)
+            time.sleep(args.interval)
 
     # final exit point happens here
     # Log a message that we are shutting down
