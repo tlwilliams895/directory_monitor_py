@@ -12,6 +12,7 @@ Dirwatcher - A long-running program
 __author__ = """T.L. Williams(tlwilliams895) completed assessment with
         Deidre Boddie and Dessance Chandler; used Python docs, RealPython
         website, SE workshop/demos, and other resources to complete assessment
+        Received assistance from Kano Marvel and JT Maupin
         """
 
 import sys
@@ -31,7 +32,7 @@ an external system.
 # Create root logger for program
 logging.basicConfig(
     format="%(asctime)s %(name)-12s %(levelname)-8s %(message)-8s %(lineno)d",
-    datefmt="%A, %B %d, %Y--%I:%M:%S%p %Z",
+    datefmt="%A, %B %d, %Y--%I:%M:%S%p",
     level=logging.DEBUG
 )
 
@@ -42,7 +43,7 @@ logger.setLevel(logging.DEBUG)
 # Toggle control for infinite while loop
 exit_flag = False
 # This variable will be available for the duration for the files being watched
-watching_files = {}
+watched_files = {}
 
 
 def search_for_magic(filename, start_line, magic_string):
@@ -69,21 +70,40 @@ def watch_directory(path, magic_string, extension, interval):
     the end of the file, so you won't have to continually re-check sections of
     a file that you have already checked.
     """
-    # Create search_4_magic = search_for_magic()
-    dir_files = os.path.listdir(path)
+    directory = os.path.isdir(path)
+    list_dir = os.listdir(path)
 
-    # Files added - New files appeared in directory; added to end of file
-    for file in dir_files:
-        if not dir_files:
-            logger.info(f"Directory Added: {path}")
-
-    # Files deleted - Previously watched and disappeared/Not changed
-    if not dir_files:
+    if not directory:
         logger.info(f"Directory Not Found: {path}")
+        print("Directory Not Found!")
+    else:
+        # check for correct extension
+        files = [file for file in list_dir if file.endswith(extension)]
 
-    # Files appended - Changed
-    if not dir_files:
-        logger.info(f"Directory Appended Files: {path}")
+        for file in files:
+            if file not in watched_files:
+                watched_files[file] = 0
+                logger.info("New File Found")
+            # Use os.path.join() to create a path to direct the file
+            new_file = os.path.join(path, file)
+
+            with open(new_file) as f:
+                # Accurate line count for tracking
+                lines_counted = watched_files[file]
+                # Create a counter variable initialized at 0
+                line_count = watched_files[file]
+                # Retrieve list of all of the lines
+                lines = f.readlines()
+                # Use for loop to return the line number and text
+                for index, line in enumerate(lines[line_count:]):
+                    line_count += 1
+                    if magic_string in line:
+                        ending_line = index + lines_counted
+                        logger.info(
+                            f"Magic Text was found on line: {ending_line}"
+                            )
+                # Use dictionary variable to output the number of files
+                watched_files[file] = line_count
 
 
 def create_parser():
@@ -96,34 +116,22 @@ def create_parser():
         prog="DirWatcher",
         description="Program will continually search within all files for modifications in the directory.",
         epilog="Enjoy the DirWatcher program! :-)"
-        )
+    )
 
-    """
-    Add the arguments for dirwatcher
-    The add_argument() method tells the ArgumentParser how to take the strings
-    on the command line and turn them into objects. This information is stored
-    and used when parse_args() is called.
-    """
-    parser.add_argument(
-        "path", default=".",
-        help="Specify the directory to watch",
-        # Runs no matter the number of args input in the terminal
-        nargs="?"
-        )
-    parser.add_argument(
-        "magic", default="flow",
-        help="Magic text to search for",
-        # Runs no matter the number of args input in the terminal
-        nargs="?"
-        )
-    parser.add_argument(
-        "-e", "--extension", default=".txt",
-        help="Filters type of file extension to search within",
-        )
-    parser.add_argument(
-        "-i", "--interval", default="3",
-        type=int, help="Polling interval",
-        )
+    # Add the arguments for dirwatcher
+    parser.add_argument("path", default=".",
+                        help="Specify the directory to watch",
+                        nargs="?")
+    parser.add_argument("magic", default="flow",
+                        help="Magic text to search for",
+                        nargs="?")
+
+    parser.add_argument("-i", default="3",
+                        type=int, help="Polling interval")
+
+    parser.add_argument("-e", default=".txt",
+                        help="Filters type of file extension to search within")
+
     return parser
 
 
@@ -151,8 +159,6 @@ def signal_handler(sig_num, frame):
     # log the associated signal name
     logger.warning('Signal Received: ' + signal.Signals(sig_num).name)
 
-    # Exit strategy for long running program to gracefully shutdow; 
-    # Signals have greater priority than the Exceptions and will execute first
     exit_flag = True
 
 
@@ -174,9 +180,10 @@ def main(args):
     # Now my signal_handler will get called if OS sends
     # either of these to my process.
 
-    # Create start_up banner
-    # File name that is running; Add time_stamp format
+    # Create start_up banner to display info from program
+    # File_Name that is running; Add time_stamp from datetime module
     start_time = datetime.datetime.now()
+    # Use () to add data as strings, not a tuple
     start_up = (
         "\n" +
         "*" * 100 +
@@ -184,37 +191,34 @@ def main(args):
         f"\n\tStarted on {start_time.isoformat()}\n" +
         "*" * 100
     )
-    # Issues a log message from the start_up strings
-    logger.info(start_up)
 
-    # global state_of_files
+    logger.info(start_up)
 
     while not exit_flag:
         try:
-            # The code to be monitored by try clause to detect an exception
-            # Call the watch_directory function - What's missing here??
-            # watch_directory(args.path)
-            logger.error(f"Does this work?")
-            time.sleep(args.interval)
-        # OSError is a built-in exception in Python and serves as the error
-        # class for the os module, which is raised when an os specific system
-        # function returns a system-related error, including I/O failures such
-        # as “file not found” or “disk full”. --GeeksForGeeks
-        except OSError as err:
-            logger.error(f"Directory Not Found: {err}")
-            time.sleep(args.interval)
-        except KeyboardInterrupt as key:
-            logger.error(f"Keyboard Command: {key}")
+            # call my directory watching function and parameters
+            watch_directory(
+                args.path,
+                args.magic,
+                args.e,
+                args.i
+            )
+            # logger.info("Info logger running in try/except")
+        except KeyboardInterrupt:
+            break
         except FileNotFoundError as err:
-            # FileNotFoundError - [Errno 2] No such file or directory: dir1.txt
-            logger.error(f"File Not Found: {err}")
-        # Keep this except clause at the end to allow other exceptions to run
+            logger.error("File Not Found", err)
         except Exception as err:
-            # This is an UNHANDLED exception - Log an ERROR level message here
-            logger.error(f"Exception Message: {err}")
-            # put a sleep inside my while loop so I don't peg the cpu usage
-            # at 100%. EX: time.sleep(polling_interval)
-            time.sleep(args.interval)
+            # This is an UNHANDLED exception
+            # Log an ERROR level message here
+            logger.error("Exception Message: ", err)
+
+            # put a sleep inside my while loop so I don't peg the
+            # cpu usage at 100%. EX: time.sleep(polling_interval)
+            time.sleep(args.i)
+
+    # final exit point happens here
+    # Log a message that we are shutting down
 
     # Final exit point happens here
     # Include the overall uptime since program start
@@ -228,11 +232,6 @@ def main(args):
     )
     # Log a message that we are shutting down
     logger.info(shut_down)
-
-    # Informs the logging system to perform an orderly shutdown by flushing
-    # and closing all handlers. This should be called at application exit and
-    # no further use of the logging system should be made after this call.
-    # logging.shutdown()
 
 
 # Import guard clause
