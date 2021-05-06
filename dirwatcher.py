@@ -7,11 +7,7 @@ found, a new message will be logged with the file and line number the text
 was found.
 """
 
-__author__ = """T.L. Williams(tlwilliams895) completed assessment with
-        Deidre Boddie and Dessance Chandler; used Python docs, RealPython
-        website, SE workshop/demos, and other resources to complete assessment
-        Received assistance from Kano Marvel, JT Maupin, and Mike Boring
-        """
+__author__ = """T.L. Williams(tlwilliams895)"""
 
 import sys
 import os
