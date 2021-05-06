@@ -1,6 +1,7 @@
 pythonenv*
 .vscode/
 .venv/
+.venv_dir_watch*
 .env
 .DS_Store
 *.log
