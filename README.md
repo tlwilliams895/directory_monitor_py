@@ -1,6 +1,6 @@
 <img height="120" src="img/DeerWatcher.jpg" />
 
-# Dirwatcher
+# Directory Monitor (Formly called Dirwatcher)
 
 ### Objectives
  - Create a long-running program
@@ -140,6 +140,3 @@ Will your long-running program fail if the directory under watch is suddenly del
 
 ### Credits
 This assignment was inspired by the story of [The Cuckoo's Egg](https://en.wikipedia.org/wiki/The_Cuckoo%27s_Egg).
-
-## Submitting your work
-To submit your solution for grading, you will need to create a github [Pull Request (PR)](https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/about-pull-requests).  Refer to the `PR Workflow` article in your course content for details.
